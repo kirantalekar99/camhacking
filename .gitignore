@@ -1,0 +1,33 @@
+# Captured cam images
+cam*.png
+
+# Tunnel binaries
+cloudflared
+cloudflared.exe
+ngrok
+ngrok.exe
+
+# Tunnel logs
+.cloudflared.log
+*.log
+
+# Captured data files
+ip.txt
+saved.ip.txt
+saved.locations.txt
+current_location.txt
+current_location.bak
+location_debug.log
+location_*.txt
+
+# Saved captures directory
+saved_locations/
+
+# Generated index files (built at runtime by sed)
+index2.html
+index3.html
+
+# Runtime temp files
+Log.log
+LocationLog.log
+LocationError.log
