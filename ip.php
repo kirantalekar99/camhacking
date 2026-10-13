@@ -1,29 +1,30 @@
 <?php
+// Capture visitor IP address (check proxy headers first)
+if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+    $ipaddress = $_SERVER['HTTP_CLIENT_IP'];
+} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+    // May contain multiple IPs (client, proxy1, proxy2...) — take the first
+    $parts = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+    $ipaddress = trim($parts[0]);
+} else {
+    $ipaddress = $_SERVER['REMOTE_ADDR'];
+}
 
-if (!empty($_SERVER['HTTP_CLIENT_IP']))
-    {
-      $ipaddress = $_SERVER['HTTP_CLIENT_IP']."\r\n";
-    }
-elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))
-    {
-      $ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR']."\r\n";
-    }
-else
-    {
-      $ipaddress = $_SERVER['REMOTE_ADDR']."\r\n";
-    }
-$useragent = " User-Agent: ";
-$browser = $_SERVER['HTTP_USER_AGENT'];
+// Sanitize: strip any newlines to prevent log injection
+$ipaddress = preg_replace('/[\r\n]/', '', $ipaddress);
 
+// Capture User-Agent and sanitize
+$browser = isset($_SERVER['HTTP_USER_AGENT'])
+    ? preg_replace('/[\r\n]/', '', $_SERVER['HTTP_USER_AGENT'])
+    : 'Unknown';
 
 $file = 'ip.txt';
-$victim = "IP: ";
-$fp = fopen($file, 'a');
+$fp   = fopen($file, 'a');
 
-fwrite($fp, $victim);
-fwrite($fp, $ipaddress);
-fwrite($fp, $useragent);
-fwrite($fp, $browser);
-
-
-fclose($fp);
+if ($fp !== false) {
+    fwrite($fp, "IP: "         . $ipaddress . "\r\n");
+    fwrite($fp, "User-Agent: " . $browser   . "\r\n");
+    fwrite($fp, "---\r\n");   // separator so multiple visits stay readable
+    fclose($fp);
+}
+?>

