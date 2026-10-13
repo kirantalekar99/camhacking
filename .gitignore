@@ -20,9 +20,6 @@ current_location.bak
 location_debug.log
 location_*.txt
 
-# Saved captures directory
-saved_locations/
-
 # Generated index files (built at runtime by sed)
 index2.html
 index3.html
@@ -31,3 +28,11 @@ index3.html
 Log.log
 LocationLog.log
 LocationError.log
+
+# Leftover location files (GPS removed)
+location_*.txt
+current_location.txt
+current_location.bak
+saved.locations.txt
+saved_locations/
+location_debug.log
